@@ -1,0 +1,12 @@
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\bin\Debug\net6.0\Proyecto.P1.Core.deps.json
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\bin\Debug\net6.0\Proyecto.P1.Core.dll
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\bin\Debug\net6.0\Proyecto.P1.Core.pdb
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.csproj.AssemblyReference.cache
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.AssemblyInfoInputs.cache
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.AssemblyInfo.cs
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.csproj.CoreCompileInputs.cache
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.dll
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\refint\Proyecto.P1.Core.dll
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\Proyecto.P1.Core.pdb
+C:\Users\virid\RiderProjects\Proyecto\Proyecto.P1.Core\obj\Debug\net6.0\ref\Proyecto.P1.Core.dll

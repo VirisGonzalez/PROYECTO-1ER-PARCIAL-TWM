@@ -19,9 +19,9 @@ public class UserServices : IUserServices
         var user = new Users
         {
             Name = userDto.Name,
-            Direction = userDto.Direction,
             Email = userDto.Email,
             Phone = userDto.Phone,
+            Password = userDto.Password,
             CreatedBy = "",
             CreatedDate = DateTime.Now,
             UpdatedBy = "",
@@ -40,9 +40,9 @@ public class UserServices : IUserServices
         if (user == null)
             throw new Exception("User not found");
         user.Name = userDto.Name;
-        user.Direction = userDto.Direction;
         user.Email = userDto.Email;
         user.Phone = userDto.Phone;
+        user.Password = userDto.Password;
         user.UpdatedBy = "";
         user.UpdateDate = DateTime.Now;
         await _usersRepository.UpdateAsync(user);

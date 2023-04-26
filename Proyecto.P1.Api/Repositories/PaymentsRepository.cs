@@ -1,32 +1,57 @@
-﻿using Proyecto.P1.Api.Repositories.Interfaces;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
+using Proyecto.P1.Api.DataAccess.Interfaces;
+using Proyecto.P1.Api.Repositories.Interfaces;
 using Proyecto.P1.Core.Entities;
 
 namespace Proyecto.P1.Api.Repositories;
 
 public class PaymentsRepository : IPaymentsRepository
 {
-    public Task<Payments> SaveAsync(Payments payment)
+    private readonly IDbContext _dbContext;
+
+    public PaymentsRepository(IDbContext context)
     {
-        throw new NotImplementedException();
+        _dbContext = context;
+    }
+    public async Task<Payments> SaveAsync(Payments payment)
+    {
+        payment.Id = await _dbContext.Connection.InsertAsync(payment);
+        return payment;
     }
 
-    public Task<Payments> UpdateAsync(Payments payment)
+    public async Task<Payments> UpdateAsync(Payments payment)
     {
-        throw new NotImplementedException();
+        await _dbContext.Connection.UpdateAsync(payment);
+        return payment;
     }
 
-    public Task<List<Payments>> GetAllAsync()
+    public async Task<List<Payments>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        const string sql = "SELECT * FROM Payments WHERE IsDeleted = 0";
+
+        var payments = await _dbContext.Connection.QueryAsync<Payments>(sql);
+
+        return payments.ToList();
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        var payments = await GetById(id);
+        if (payments == null)
+            return false;
+        
+        payments.IsDeleted = true;
+
+        return await _dbContext.Connection.UpdateAsync(payments);
     }
 
-    public Task<Payments> GetById(int id)
+    public async Task<Payments> GetById(int id)
     {
-        throw new NotImplementedException();
+        var payment = await _dbContext.Connection.GetAsync<Payments>(id);
+
+        if (payment == null)
+            return null;
+        return payment.IsDeleted == true ? null : payment;
     }
 }

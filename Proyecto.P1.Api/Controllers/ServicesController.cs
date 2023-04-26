@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Proyecto.P1.Api.Repositories.Interfaces;
+using Proyecto.P1.Api.Services.Interfaces;
+using Proyecto.P1.Core.Dto;
 using Proyecto.P1.Core.Entities;
 using Proyecto.P1.Core.Http;
 
@@ -9,50 +11,64 @@ namespace Proyecto.P1.Api.Controllers;
 [Route("api/[controller]")]
 public class ServicesController: ControllerBase
 {
-    private readonly IServicesRepository _servicesRepository;
+    private readonly IServiceServices _serviceServices;
     
-    public ServicesController(IServicesRepository servicesRepository)
+    public ServicesController(IServiceServices srServiceServices)
     {
-        _servicesRepository = servicesRepository;
+        _serviceServices = srServiceServices;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Response<List<Services>>>> GetAll()
+    public async Task<ActionResult<Response<List<ServiceDto>>>> GetAll()
     {
-        var service = await _servicesRepository.GetAllAsync();
-        var response = new Response<List<Services>>();
-        response.Data = service;
+        var response = new Response<List<ServiceDto>>
+        {
+            Data = await _serviceServices.GetAllAsync()
+        };
 
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Response<Services>>> Post([FromBody] Services service)
+    public async Task<ActionResult<Response<ServiceDto>>> Post([FromBody] ServiceDto serviceDto)
     {
-        service = await _servicesRepository.SaveAsync(service);
+        var response = new Response<ServiceDto>
+        {
+            Data = await _serviceServices.SaveAsync(serviceDto)
+        };
         
-        var response = new Response<Services>();
-        response.Data = service;
-
-        return Created($"/api/[controller]/{service.Id}", response);
+        return Created($"/api/[controller]/{response.Data.Id}", response);
     }
 
     [HttpGet]
     [Route("{id:int}")]
-    public async Task<ActionResult<Response<Services>>> GetById(int id)
+    public async Task<ActionResult<Response<ServiceDto>>> GetById(int id)
     {
-        var service = await _servicesRepository.GetById(id);
-        var response = new Response<Services>();
-        response.Data = service;
+        var response = new Response<ServiceDto>();
+        
+        if (!await _serviceServices.ServiceExist(id))
+        {
+            response.Errors.Add("Service Not Found");
+            return NotFound(response);
+        }
+        
+        response.Data = await _serviceServices.GetById(id);
 
         return Ok(response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<Services>>> Update([FromBody] Services service)
+    public async Task<ActionResult<Response<ServiceDto>>> Update([FromBody] ServiceDto serviceDto)
     {
-        var result = await _servicesRepository.UpdateAsync(service);
-        var response = new Response<Services> { Data = result };
+        var response = new Response<ServiceDto>();
+        
+        if (!await _serviceServices.ServiceExist(serviceDto.Id))
+        {
+            response.Errors.Add("Service Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _serviceServices.UpdateAsync(serviceDto);
 
         return Ok(response);
     }
@@ -61,8 +77,10 @@ public class ServicesController: ControllerBase
     [Route("{id:int}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id)
     {
-        var service = await _servicesRepository.DeleteAsync(id);
+        var response = new Response<bool>();
+        var result = await _serviceServices.DeleteAsync(id);
+        response.Data = result;
 
-        return Ok(service);
+        return Ok(response);
     }
 }

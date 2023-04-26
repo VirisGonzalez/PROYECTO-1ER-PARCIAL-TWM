@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Proyecto.P1.Api.Repositories.Interfaces;
+using Proyecto.P1.Api.Services.Interfaces;
+using Proyecto.P1.Core.Dto;
 using Proyecto.P1.Core.Entities;
 using Proyecto.P1.Core.Http;
 
@@ -9,50 +11,64 @@ namespace Proyecto.P1.Api.Controllers;
 [Route("api/[controller]")]
 public class RequestsController: ControllerBase
 {
-    private readonly IRequestsRepository _requestsRepository;
+    private readonly IRequestServices _requestServices;
     
-    public RequestsController(IRequestsRepository requestsRepository)
+    public RequestsController(IRequestServices requestServices)
     {
-        _requestsRepository = requestsRepository;
+        _requestServices = requestServices;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Response<List<Requests>>>> GetAll()
+    public async Task<ActionResult<Response<List<RequestDto>>>> GetAll()
     {
-        var request = await _requestsRepository.GetAllAsync();
-        var response = new Response<List<Requests>>();
-        response.Data = request;
+        var response = new Response<List<RequestDto>>
+        {
+            Data = await _requestServices.GetAllAsync()
+        };
 
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Response<Requests>>> Post([FromBody] Requests request)
+    public async Task<ActionResult<Response<RequestDto>>> Post([FromBody] RequestDto requestDto)
     {
-        request = await _requestsRepository.SaveAsync(request);
+        var response = new Response<RequestDto>
+        {
+            Data = await _requestServices.SaveAsync(requestDto)
+        };
         
-        var response = new Response<Requests>();
-        response.Data = request;
-
-        return Created($"/api/[controller]/{request.Id}", response);
+        return Created($"/api/[controller]/{response.Data.Id}", response);
     }
 
     [HttpGet]
     [Route("{id:int}")]
-    public async Task<ActionResult<Response<Requests>>> GetById(int id)
+    public async Task<ActionResult<Response<RequestDto>>> GetById(int id)
     {
-        var request = await _requestsRepository.GetById(id);
-        var response = new Response<Requests>();
-        response.Data = request;
+        var response = new Response<RequestDto>();
+        
+        if (!await _requestServices.RequestExist(id))
+        {
+            response.Errors.Add("Brand Not Found");
+            return NotFound(response);
+        }
+        
+        response.Data = await _requestServices.GetById(id);
 
         return Ok(response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<Requests>>> Update([FromBody] Requests request)
+    public async Task<ActionResult<Response<RequestDto>>> Update([FromBody] RequestDto requestDto)
     {
-        var result = await _requestsRepository.UpdateAsync(request);
-        var response = new Response<Requests> { Data = result };
+        var response = new Response<RequestDto>();
+        
+        if (!await _requestServices.RequestExist(requestDto.Id))
+        {
+            response.Errors.Add("Brand Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _requestServices.UpdateAsync(requestDto);
 
         return Ok(response);
     }
@@ -61,8 +77,10 @@ public class RequestsController: ControllerBase
     [Route("{id:int}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id)
     {
-        var request = await _requestsRepository.DeleteAsync(id);
+        var response = new Response<bool>();
+        var result = await _requestServices.DeleteAsync(id);
+        response.Data = result;
 
-        return Ok(request);
+        return Ok(response);
     }
 }

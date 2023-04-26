@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Proyecto.P1.Api.Repositories.Interfaces;
+using Proyecto.P1.Api.Services.Interfaces;
+using Proyecto.P1.Core.Dto;
 using Proyecto.P1.Core.Entities;
 using Proyecto.P1.Core.Http;
 
@@ -9,50 +11,64 @@ namespace Proyecto.P1.Api.Controllers;
 [Route("api/[controller]")]
 public class QuotesController: ControllerBase
 {
-    private readonly IQuotesRepository _quotesRepository;
+    private readonly IQuoteServices _quoteServices;
     
-    public QuotesController(IQuotesRepository quotesRepository)
+    public QuotesController(IQuoteServices quoteServices)
     {
-        _quotesRepository = quotesRepository;
+        _quoteServices = quoteServices;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Response<List<Quotes>>>> GetAll()
+    public async Task<ActionResult<Response<List<QuotesDto>>>> GetAll()
     {
-        var quotes = await _quotesRepository.GetAllAsync();
-        var response = new Response<List<Quotes>>();
-        response.Data = quotes;
+        var response = new Response<List<QuotesDto>>
+        {
+            Data = await _quoteServices.GetAllAsync()
+        };
 
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Response<Quotes>>> Post([FromBody] Quotes quote)
+    public async Task<ActionResult<Response<QuotesDto>>> Post([FromBody] QuotesDto quotesDto)
     {
-        quote = await _quotesRepository.SaveAsync(quote);
+        var response = new Response<QuotesDto>
+        {
+            Data = await _quoteServices.SaveAsync(quotesDto)
+        };
         
-        var response = new Response<Quotes>();
-        response.Data = quote;
-
-        return Created($"/api/[controller]/{quote.Id}", response);
+        return Created($"/api/[controller]/{response.Data.Id}", response);
     }
 
     [HttpGet]
     [Route("{id:int}")]
-    public async Task<ActionResult<Response<Quotes>>> GetById(int id)
+    public async Task<ActionResult<Response<QuotesDto>>> GetById(int id)
     {
-        var quote = await _quotesRepository.GetById(id);
-        var response = new Response<Quotes>();
-        response.Data = quote;
+        var response = new Response<QuotesDto>();
+        
+        if (!await _quoteServices.QuoteExist(id))
+        {
+            response.Errors.Add("Quote Not Found");
+            return NotFound(response);
+        }
+        
+        response.Data = await _quoteServices.GetById(id);
 
         return Ok(response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<Quotes>>> Update([FromBody] Quotes quote)
+    public async Task<ActionResult<Response<QuotesDto>>> Update([FromBody] QuotesDto quotesDto)
     {
-        var result = await _quotesRepository.UpdateAsync(quote);
-        var response = new Response<Quotes> { Data = result };
+        var response = new Response<QuotesDto>();
+        
+        if (!await _quoteServices.QuoteExist(quotesDto.Id))
+        {
+            response.Errors.Add("Quote Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _quoteServices.UpdateAsync(quotesDto);
 
         return Ok(response);
     }
@@ -61,8 +77,10 @@ public class QuotesController: ControllerBase
     [Route("{id:int}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id)
     {
-        var quote = await _quotesRepository.DeleteAsync(id);
+        var response = new Response<bool>();
+        var result = await _quoteServices.DeleteAsync(id);
+        response.Data = result;
 
-        return Ok(quote);
+        return Ok(response);
     }
 }

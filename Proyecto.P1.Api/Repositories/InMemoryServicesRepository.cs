@@ -5,14 +5,14 @@ namespace Proyecto.P1.Api.Repositories;
 
 public class InMemoryServicesRepository: IServicesRepository
 {
-    private readonly List<Services> _services;
+    private readonly List<Service> _services;
 
     public InMemoryServicesRepository()
     {
-        _services = new List<Services>();
+        _services = new List<Service>();
     }
     
-    public async Task<Services> SaveAsync(Services service)
+    public async Task<Service> SaveAsync(Service service)
     {
         service.Id = _services.Count + 1;
         _services.Add(service);
@@ -20,7 +20,7 @@ public class InMemoryServicesRepository: IServicesRepository
         return service;
     }
 
-    public async Task<Services> UpdateAsync(Services service)
+    public async Task<Service> UpdateAsync(Service service)
     {
         var index = _services.FindIndex(x => x.Id == service.Id);
 
@@ -29,7 +29,7 @@ public class InMemoryServicesRepository: IServicesRepository
         return await Task.FromResult(service);
     }
 
-    public async Task<List<Services>> GetAllAsync()
+    public async Task<List<Service>> GetAllAsync()
     {
         return _services;
     }
@@ -41,7 +41,7 @@ public class InMemoryServicesRepository: IServicesRepository
         return true;
     }
 
-    public async Task<Services> GetById(int id)
+    public async Task<Service> GetById(int id)
     {
         var service= _services.FirstOrDefault(x => x.Id == id);
 

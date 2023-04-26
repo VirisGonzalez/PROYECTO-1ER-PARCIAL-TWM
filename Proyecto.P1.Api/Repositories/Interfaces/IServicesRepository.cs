@@ -5,17 +5,17 @@ namespace Proyecto.P1.Api.Repositories.Interfaces;
 public interface IServicesRepository
 {
     //Metodo para guardar categorias
-    Task<Services> SaveAsync(Services service);
+    Task<Service> SaveAsync(Service service);
     
     //Metodo para Actucalizar las categorias 
-    Task<Services> UpdateAsync(Services service);
+    Task<Service> UpdateAsync(Service service);
     
     //Metodo para retornar una lista de categorias
-    Task<List<Services>> GetAllAsync();
+    Task<List<Service>> GetAllAsync();
     
     //Metodo para retornar el id de las categorias que borrará
     Task<bool> DeleteAsync(int id);
     
     //Metodo para obtener una categoria por id
-    Task<Services> GetById(int id);
+    Task<Service> GetById(int id);
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Proyecto.P1.Api.Repositories.Interfaces;
+using Proyecto.P1.Api.Services.Interfaces;
+using Proyecto.P1.Core.Dto;
 using Proyecto.P1.Core.Entities;
 using Proyecto.P1.Core.Http;
 
@@ -9,50 +11,64 @@ namespace Proyecto.P1.Api.Controllers;
 [Route("api/[controller]")]
 public class WorkersController: ControllerBase
 {
-    private readonly IWorkersRepository _workersRepository;
+    private readonly IWorkerServices _workerServices;
     
-    public WorkersController(IWorkersRepository workersRepository)
+    public WorkersController(IWorkerServices workerServices)
     {
-        _workersRepository = workersRepository;
+        _workerServices = workerServices;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Response<List<Workers>>>> GetAll()
+    public async Task<ActionResult<Response<List<WorkerDto>>>> GetAll()
     {
-        var worker = await _workersRepository.GetAllAsync();
-        var response = new Response<List<Workers>>();
-        response.Data = worker;
+        var response = new Response<List<WorkerDto>>
+        {
+            Data = await _workerServices.GetAllAsync()
+        };
 
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Response<Workers>>> Post([FromBody] Workers worker)
+    public async Task<ActionResult<Response<WorkerDto>>> Post([FromBody] WorkerDto workerDto)
     {
-        worker = await _workersRepository.SaveAsync(worker);
+        var response = new Response<WorkerDto>
+        {
+            Data = await _workerServices.SaveAsync(workerDto)
+        };
         
-        var response = new Response<Workers>();
-        response.Data = worker;
-
-        return Created($"/api/[controller]/{worker.Id}", response);
+        return Created($"/api/[controller]/{response.Data.Id}", response);
     }
 
     [HttpGet]
     [Route("{id:int}")]
-    public async Task<ActionResult<Response<Workers>>> GetById(int id)
+    public async Task<ActionResult<Response<WorkerDto>>> GetById(int id)
     {
-        var worker = await _workersRepository.GetById(id);
-        var response = new Response<Workers>();
-        response.Data = worker;
+        var response = new Response<WorkerDto>();
+        
+        if (!await _workerServices.WorkerExist(id))
+        {
+            response.Errors.Add("Worker Not Found");
+            return NotFound(response);
+        }
+        
+        response.Data = await _workerServices.GetById(id);
 
         return Ok(response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<Workers>>> Update([FromBody] Workers worker)
+    public async Task<ActionResult<Response<WorkerDto>>> Update([FromBody] WorkerDto workerDto)
     {
-        var result = await _workersRepository.UpdateAsync(worker);
-        var response = new Response<Workers> { Data = result };
+        var response = new Response<WorkerDto>();
+        
+        if (!await _workerServices.WorkerExist(workerDto.Id))
+        {
+            response.Errors.Add("Worker Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _workerServices.UpdateAsync(workerDto);
 
         return Ok(response);
     }
@@ -61,8 +77,10 @@ public class WorkersController: ControllerBase
     [Route("{id:int}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id)
     {
-        var worker = await _workersRepository.DeleteAsync(id);
+        var response = new Response<bool>();
+        var result = await _workerServices.DeleteAsync(id);
+        response.Data = result;
 
-        return Ok(worker);
+        return Ok(response);
     }
 }

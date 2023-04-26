@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Proyecto.P1.Api.Repositories.Interfaces;
+using Proyecto.P1.Api.Services.Interfaces;
+using Proyecto.P1.Core.Dto;
 using Proyecto.P1.Core.Entities;
 using Proyecto.P1.Core.Http;
 
@@ -9,50 +11,64 @@ namespace Proyecto.P1.Api.Controllers;
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly IUsersRepository _usersRepository;
+    private readonly IUserServices _userServices;
     
-    public UsersController(IUsersRepository usersRepository)
+    public UsersController(IUserServices userServices)
     {
-        _usersRepository = usersRepository;
+        _userServices = userServices;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Response<List<Users>>>> GetAll()
+    public async Task<ActionResult<Response<List<UserDto>>>> GetAll()
     {
-        var users = await _usersRepository.GetAllAsync();
-        var response = new Response<List<Users>>();
-        response.Data = users;
+        var response = new Response<List<UserDto>>
+        {
+            Data = await _userServices.GetAllAsync()
+        };
 
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Response<Users>>> Post([FromBody] Users user)
+    public async Task<ActionResult<Response<UserDto>>> Post([FromBody] UserDto userDto)
     {
-        user = await _usersRepository.SaveAsync(user);
+        var response = new Response<UserDto>
+        {
+            Data = await _userServices.SaveAsync(userDto)
+        };
         
-        var response = new Response<Users>();
-        response.Data = user;
-
-        return Created($"/api/[controller]/{user.Id}", response);
+        return Created($"/api/[controller]/{response.Data.Id}", response);
     }
 
     [HttpGet]
     [Route("{id:int}")]
-    public async Task<ActionResult<Response<Users>>> GetById(int id)
+    public async Task<ActionResult<Response<UserDto>>> GetById(int id)
     {
-        var user = await _usersRepository.GetById(id);
-        var response = new Response<Users>();
-        response.Data = user;
+        var response = new Response<UserDto>();
+        
+        if (!await _userServices.UserExist(id))
+        {
+            response.Errors.Add("User Not Found");
+            return NotFound(response);
+        }
+        
+        response.Data = await _userServices.GetById(id);
 
         return Ok(response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<Users>>> Update([FromBody] Users user)
+    public async Task<ActionResult<Response<UserDto>>> Update([FromBody] UserDto userDto)
     {
-        var result = await _usersRepository.UpdateAsync(user);
-        var response = new Response<Users> { Data = result };
+        var response = new Response<UserDto>();
+        
+        if (!await _userServices.UserExist(userDto.Id))
+        {
+            response.Errors.Add("User Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _userServices.UpdateAsync(userDto);
 
         return Ok(response);
     }
@@ -61,8 +77,10 @@ public class UsersController : ControllerBase
     [Route("{id:int}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id)
     {
-        var user = await _usersRepository.DeleteAsync(id);
+        var response = new Response<bool>();
+        var result = await _userServices.DeleteAsync(id);
+        response.Data = result;
 
-        return Ok(user);
+        return Ok(response);
     }
 }

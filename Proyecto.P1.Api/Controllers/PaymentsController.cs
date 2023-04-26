@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Proyecto.P1.Api.Repositories.Interfaces;
+using Proyecto.P1.Api.Services.Interfaces;
+using Proyecto.P1.Core.Dto;
 using Proyecto.P1.Core.Entities;
 using Proyecto.P1.Core.Http;
 
@@ -10,51 +12,64 @@ namespace Proyecto.P1.Api.Controllers;
 [Route("api/[controller]")]
 public class PaymentsController: ControllerBase
 {
-    private readonly IPaymentsRepository _paymentsRepository;
+    private readonly IPaymentServices _paymentServices;
     
-    public PaymentsController(IPaymentsRepository paymentsRepository)
+    public PaymentsController(IPaymentServices paymentServices)
     {
-        _paymentsRepository = paymentsRepository;
+        _paymentServices = paymentServices;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Response<List<Payments>>>> GetAll()
+    public async Task<ActionResult<Response<List<PaymentDto>>>> GetAll()
     {
-        var payments = await _paymentsRepository.GetAllAsync();
-        var response = new Response<List<Payments>>();
-        response.Data = payments;
-
+        var response = new Response<List<PaymentDto>>
+        {
+            Data = await _paymentServices.GetAllAsync()
+        };
+        
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Response<Payments>>> Post([FromBody] Payments payment)
+    public async Task<ActionResult<Response<PaymentDto>>> Post([FromBody] PaymentDto paymentDto)
     {
-        payment = await _paymentsRepository.SaveAsync(payment);
+        var response = new Response<PaymentDto>
+        {
+            Data = await _paymentServices.SaveAsync(paymentDto)
+        };
         
-        var response = new Response<Payments>();
-        response.Data = payment;
-
-        return Created($"/api/[controller]/{payment.Id}", response);
+        return Created($"/api/[controller]/{response.Data.Id}", response);
     }
 
     [HttpGet]
     [Route("{id:int}")]
-    public async Task<ActionResult<Response<Payments>>> GetById(int id)
+    public async Task<ActionResult<Response<PaymentDto>>> GetById(int id)
     {
-        var payment = await _paymentsRepository.GetById(id);
-        var response = new Response<Payments>();
-        response.Data = payment;
+        var response = new Response<PaymentDto>();
+
+        if (!await _paymentServices.PaymentExist(id))
+        {
+            response.Errors.Add("Payment Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _paymentServices.GetById(id);
 
         return Ok(response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<Payments>>> Update([FromBody] Payments payment)
+    public async Task<ActionResult<Response<PaymentDto>>> Update([FromBody] PaymentDto paymentDto)
     {
-        var result = await _paymentsRepository.UpdateAsync(payment);
-        var response = new Response<Payments> { Data = result };
+        var response = new Response<PaymentDto>();
 
+        if (!await _paymentServices.PaymentExist(paymentDto.Id))
+        {
+            response.Errors.Add("Paymet Not Found");
+            return NotFound(response);
+        }
+
+        response.Data = await _paymentServices.UpdateAsync(paymentDto);
         return Ok(response);
     }
 
@@ -62,8 +77,10 @@ public class PaymentsController: ControllerBase
     [Route("{id:int}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id)
     {
-        var payment = await _paymentsRepository.DeleteAsync(id);
+        var response = new Response<bool>();
+        var result = await _paymentServices.DeleteAsync(id);
+        response.Data = result;
 
-        return Ok(payment);
+        return Ok(response);
     }
 }

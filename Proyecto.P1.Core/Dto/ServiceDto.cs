@@ -5,6 +5,7 @@ namespace Proyecto.P1.Core.Dto;
 public class ServiceDto : DtoBase
 {
     public string tipo { get; set; }
+    public int idWorker { get; set; }
 
     public ServiceDto()
     {
@@ -15,5 +16,6 @@ public class ServiceDto : DtoBase
     {
         Id = services.Id;
         tipo = services.tipo;
+        idWorker = services.idWorker;
     }
 }

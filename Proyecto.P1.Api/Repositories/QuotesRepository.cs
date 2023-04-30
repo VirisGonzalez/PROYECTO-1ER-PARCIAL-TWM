@@ -1,32 +1,57 @@
-﻿using Proyecto.P1.Api.Repositories.Interfaces;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
+using Proyecto.P1.Api.DataAccess.Interfaces;
+using Proyecto.P1.Api.Repositories.Interfaces;
 using Proyecto.P1.Core.Entities;
 
 namespace Proyecto.P1.Api.Repositories;
 
 public class QuotesRepository : IQuotesRepository
 {
-    public Task<Quotes> SaveAsync(Quotes quote)
+    private readonly IDbContext _dbContext;
+
+    public QuotesRepository(IDbContext context)
     {
-        throw new NotImplementedException();
+        _dbContext = context;
+    }
+    
+    public async Task<Quotes> SaveAsync(Quotes quote)
+    {
+        quote.Id = await _dbContext.Connection.InsertAsync(quote);
+        return quote;
     }
 
-    public Task<Quotes> UpdateAsync(Quotes quote)
+    public async Task<Quotes> UpdateAsync(Quotes quote)
     {
-        throw new NotImplementedException();
+        await _dbContext.Connection.UpdateAsync(quote);
+        return quote;
     }
 
-    public Task<List<Quotes>> GetAllAsync()
+    public async Task<List<Quotes>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        const string sql = "SELECT * FROM Quotes WHERE IsDeleted = 0";
+
+        var quotes = await _dbContext.Connection.QueryAsync<Quotes>(sql);
+
+        return quotes.ToList();
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        var quotes = await GetById(id);
+        if (quotes == null)
+            return false;
+        quotes.IsDeleted = true;
+
+        return await _dbContext.Connection.UpdateAsync(quotes);
     }
 
-    public Task<Quotes> GetById(int id)
+    public async Task<Quotes> GetById(int id)
     {
-        throw new NotImplementedException();
+        var quote = await _dbContext.Connection.GetAsync<Quotes>(id);
+
+        if (quote == null)
+            return null;
+        return quote.IsDeleted == true ? null : quote;
     }
 }

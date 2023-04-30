@@ -1,32 +1,57 @@
-﻿using Proyecto.P1.Api.Repositories.Interfaces;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
+using Proyecto.P1.Api.DataAccess.Interfaces;
+using Proyecto.P1.Api.Repositories.Interfaces;
 using Proyecto.P1.Core.Entities;
 
 namespace Proyecto.P1.Api.Repositories;
 
 public class WorkersRepository : IWorkersRepository
 {
-    public Task<Workers> SaveAsync(Workers worker)
+    private readonly IDbContext _dbContext;
+
+    public WorkersRepository(IDbContext context)
     {
-        throw new NotImplementedException();
+        _dbContext = context;
+    }
+    public async  Task<Workers> SaveAsync(Workers worker)
+    {
+        worker.Id = await _dbContext.Connection.InsertAsync(worker);
+        return worker;
     }
 
-    public Task<Workers> UpdateAsync(Workers worker)
+    public async  Task<Workers> UpdateAsync(Workers worker)
     {
-        throw new NotImplementedException();
+        await _dbContext.Connection.UpdateAsync(worker);
+        return worker;
     }
 
-    public Task<List<Workers>> GetAllAsync()
+    public async Task<List<Workers>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        const string sql = "SELECT * FROM Workers WHERE IsDeleted = 0";
+
+        var worker = await _dbContext.Connection.QueryAsync<Workers>(sql);
+
+        return worker.ToList();
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        var worker = await GetById(id);
+        if (worker == null)
+            return false;
+        
+        worker.IsDeleted = true;
+
+        return await _dbContext.Connection.UpdateAsync(worker); 
     }
 
-    public Task<Workers> GetById(int id)
+    public async Task<Workers> GetById(int id)
     {
-        throw new NotImplementedException();
+        var worker = await _dbContext.Connection.GetAsync<Workers>(id);
+
+        if (worker == null)
+            return null;
+        return worker.IsDeleted == true ? null : worker;
     }
 }

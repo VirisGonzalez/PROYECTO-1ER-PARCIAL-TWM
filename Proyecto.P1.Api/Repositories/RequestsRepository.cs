@@ -1,32 +1,56 @@
-﻿using Proyecto.P1.Api.Repositories.Interfaces;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
+using Proyecto.P1.Api.DataAccess.Interfaces;
+using Proyecto.P1.Api.Repositories.Interfaces;
 using Proyecto.P1.Core.Entities;
 
 namespace Proyecto.P1.Api.Repositories;
 
 public class RequestsRepository : IRequestsRepository
 {
-    public Task<Requests> SaveAsync(Requests request)
+    private readonly IDbContext _dbContext;
+
+    public RequestsRepository(IDbContext context)
     {
-        throw new NotImplementedException();
+        _dbContext = context;
+    }
+    public async Task<Requests> SaveAsync(Requests request)
+    {
+        request.Id = await _dbContext.Connection.InsertAsync(request);
+        return request;
     }
 
-    public Task<Requests> UpdateAsync(Requests request)
+    public async Task<Requests> UpdateAsync(Requests request)
     {
-        throw new NotImplementedException();
+        await _dbContext.Connection.UpdateAsync(request);
+        return request;
     }
 
-    public Task<List<Requests>> GetAllAsync()
+    public async Task<List<Requests>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        const string sql = "SELECT * FROM Requests WHERE IsDeleted = 0";
+
+        var request = await _dbContext.Connection.QueryAsync<Requests>(sql);
+
+        return request.ToList();
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        var requests = await GetById(id);
+        if (requests == null)
+            return false;
+        requests.IsDeleted = true;
+
+        return await _dbContext.Connection.UpdateAsync(requests);
     }
 
-    public Task<Requests> GetById(int id)
+    public async Task<Requests> GetById(int id)
     {
-        throw new NotImplementedException();
+        var request = await _dbContext.Connection.GetAsync<Requests>(id);
+
+        if (request == null)
+            return null;
+        return request.IsDeleted == true ? null : request;
     }
 }

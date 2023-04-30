@@ -28,11 +28,11 @@ public class UsersRepository: IUsersRepository
 
     public async Task<List<Users>> GetAllAsync()
     {
-        const string sql = "SELECT * FROM User WHERE IsDeleted = 0";
+        const string sql = "SELECT * FROM Users WHERE IsDeleted = 0";
 
-        var users = await _dbContext.Connection.QueryAsync<Users>(sql);
+        var user = await _dbContext.Connection.QueryAsync<Users>(sql);
 
-        return users.ToList();
+        return user.ToList();
     }
 
     public async Task<bool> DeleteAsync(int id)

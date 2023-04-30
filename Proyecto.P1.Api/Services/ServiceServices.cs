@@ -19,6 +19,7 @@ public class ServiceServices : IServiceServices
         var service = new Service
         {
             tipo = serviceDto.tipo,
+            idWorker = serviceDto.idWorker,
             CreatedBy = "",
             CreatedDate = DateTime.Now,
             UpdatedBy = "",
@@ -37,6 +38,7 @@ public class ServiceServices : IServiceServices
         if (service == null)
             throw new Exception("Service not found");
         service.tipo = serviceDto.tipo;
+        service.idWorker = serviceDto.idWorker;
         service.UpdatedBy = "";
         service.UpdateDate = DateTime.Now;
         await _servicesRepository.UpdateAsync(service);
